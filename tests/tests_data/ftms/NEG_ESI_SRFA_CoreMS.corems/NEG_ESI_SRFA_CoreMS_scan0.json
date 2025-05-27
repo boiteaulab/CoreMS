@@ -3,8 +3,8 @@
         "Aterm": 322479750.0,
         "Bterm": -2339534713.0189333,
         "Cterm": 0,
-        "baselise_noise": 0.0032834399222549633,
-        "baselise_noise_std": 0.00441068792851957,
+        "baseline_noise": 0.0032834399222549633,
+        "baseline_noise_std": 0.00441068792851957,
         "mobility_rt": 0,
         "mobility_scan": 0,
         "polarity": -1,
@@ -33,21 +33,21 @@
         "calib_pol_order": 2,
         "calib_sn_threshold": 2.0,
         "do_calibration": true,
-        "implemented_noise_threshold_methods": [
+        "noise_threshold_methods_implemented": [
             "auto",
             "signal_noise",
             "relative_abundance"
         ],
         "max_calib_ppm_error": 1.0,
-        "max_noise_mz": 1200.0,
+        "noise_max_mz": 1200.0,
         "max_picking_mz": 1200.0,
         "min_calib_ppm_error": -1.0,
-        "min_noise_mz": 50.0,
+        "noise_min_mz": 50.0,
         "min_picking_mz": 50.0,
-        "noise_threshold_std": 6,
-        "relative_abundance_threshold": 6.0,
-        "s2n_threshold": 4.0,
-        "threshold_method": "relative_abundance"
+        "noise_threshold_min_std": 6,
+        "noise_threshold_min_relative_abundance": 6.0,
+        "noise_threshold_min_s2n": 4.0,
+        "noise_threshold_method": "relative_abundance"
     },
     "MolecularFormulaSearch": {
         "adduct_atoms_neg": [

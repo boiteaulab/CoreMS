@@ -30,11 +30,11 @@ from corems.encapsulation.factory.parameters import MSParameters
 file_location = "tests/tests_data/icpms/rmb_161221_kansas_h2o_2"
 
 #Set peak detection threshold method
-MSParameters.mass_spectrum.threshold_method = 'relative_abundance'
-MSParameters.mass_spectrum.relative_abundance_threshold = 1
+MSParameters.mass_spectrum.noise_threshold_method = 'relative_abundance'
+MSParameters.mass_spectrum.noise_threshold_min_relative_abundance = 1
 
-MSParameters.mass_spectrum.threshold_method = 'log'
-MSParameters.mass_spectrum.s2n_threshold = 10
+MSParameters.mass_spectrum.noise_threshold_method = 'log'
+MSParameters.mass_spectrum.noise_threshold_min_s2n = 10
 
 #Parser for thermo RAW files. 
 parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location)
@@ -165,8 +165,11 @@ plt.show()
 
 MS1scans=MSn[np.where(MSn[:,2] == 0)]
 scans=MS1scans[np.where((MS1scans[:,1] >= timestart/60) & (MS1scans[:,1] <= timestop/60))][:,0].tolist()
-AverageMS = parser.get_average_mass_spectrum_by_scanlist(scans)
+parser.chromatogram_settings.scans = scans
+
+AverageMS = parser.get_average_mass_spectrum()
 AverageMS.plot_mz_domain_profile()
+
 plt.show()
 
 print(AverageMS.mz_exp.size)
@@ -186,17 +189,14 @@ for mz in AverageMS.mz_exp[1:20]:
     EICdict[mz]=EIC
 
 # sums all the mass spectra
-mass_spectrum = parser.get_average_mass_spectrum_in_scan_range()
+mass_spectrum = parser.get_average_mass_spectrum()
 
-#mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans)
+
 mass_spectrum.plot_mz_domain_profile()
 plt.show()
 
 mass_spectrum.plot_profile_and_noise_threshold()
 plt.show()
-
-# sums scans in selected range
-#mass_spectrum = parser.get_average_mass_spectrum_in_scan_range(first_scan=1, last_scan=5)
 
 
 mass_spectrum.molecular_search_settings.error_method = 'None'

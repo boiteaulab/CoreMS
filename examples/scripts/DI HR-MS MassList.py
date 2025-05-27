@@ -21,12 +21,14 @@ from corems.mass_spectrum.input.massList import ReadMassList
 from corems.molecular_id.factory.classification import HeteroatomsClassification
 from corems.mass_spectrum.calc.Calibration import MzDomainCalibration
 from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFormulas
-from corems import SuppressPrints, get_filename, get_filenames
+from corems import SuppressPrints
 from corems.transient.input.brukerSolarix import ReadBrukerSolarix
 from corems.mass_spectra.input import rawFileReader
 
 from corems.encapsulation.constant import Atoms
 from corems.encapsulation.factory.parameters import MSParameters
+
+from support_code.filefinder import get_filename, get_filenames
 
 def mzdomain_calibration(mass_spectrum):
 
@@ -39,8 +41,8 @@ def run_bruker(file_location):
 
     with ReadBrukerSolarix(file_location) as transient:
 
-        MSParameters.mass_spectrum.threshold_method = 'log'
-        MSParameters.mass_spectrum.s2n_threshold = 6
+        MSParameters.mass_spectrum.noise_threshold_method = 'log'
+        MSParameters.mass_spectrum.noise_threshold_min_s2n = 6
 
         mass_spectrum = transient.get_mass_spectrum(plot_result=False, auto_process=True)
         # mass_spectrum.plot_profile_and_noise_threshold()
@@ -56,14 +58,14 @@ def run_bruker(file_location):
 
 def run_thermo(file_location):
 
-    MSParameters.mass_spectrum.threshold_method = 'log'
-    MSParameters.mass_spectrum.s2n_threshold = 6
+    MSParameters.mass_spectrum.noise_threshold_method = 'log'
+    MSParameters.mass_spectrum.noise_threshold_min_s2n = 6
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location)
 
     # mass_spectrum = transient.get_mass_spectrum(plot_result=False, auto_process=True)
 
-    mass_spectrum = parser.get_average_mass_spectrum_in_scan_range()
+    mass_spectrum = parser.get_average_mass_spectrum()
 
     return mass_spectrum, 3
 

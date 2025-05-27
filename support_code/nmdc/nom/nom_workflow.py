@@ -22,18 +22,19 @@ from corems.mass_spectrum.input.massList import ReadMassList
 from corems.molecular_id.factory.classification import HeteroatomsClassification, Labels
 from corems.molecular_id.search.priorityAssignment import OxygenPriorityAssignment
 from corems.molecular_id.search.molecularFormulaSearch import SearchMolecularFormulas
-from corems import SuppressPrints, get_filename, get_dirnames
+from corems import SuppressPrints
 from corems.transient.input.brukerSolarix import ReadBrukerSolarix
 from corems.mass_spectra.input import rawFileReader
 from corems.encapsulation.factory.parameters import MSParameters
 from support_code.nmdc.metadata.nmdc_registration import DMS_Mapping, NMDC_Metadata
+from support_code.filefinder import get_dirnames, get_filename
 
 def run_bruker(file_location):
 
     with ReadBrukerSolarix(file_location) as transient:
 
-        MSParameters.mass_spectrum.threshold_method = 'log'
-        MSParameters.mass_spectrum.s2n_threshold = 6
+        MSParameters.mass_spectrum.noise_threshold_methodmethod = 'log'
+        MSParameters.mass_spectrum.noise_threshold_min_s2n = 6
 
         mass_spectrum = transient.get_mass_spectrum(plot_result=False, auto_process=True)
         # mass_spectrum.plot_profile_and_noise_threshold()
@@ -43,14 +44,15 @@ def run_bruker(file_location):
 
 def run_thermo(file_location):
 
-    MSParameters.mass_spectrum.threshold_method = 'log'
-    MSParameters.mass_spectrum.noise_threshold_std = 3
+    MSParameters.mass_spectrum.noise_threshold_method = 'log'
+    MSParameters.mass_spectrum.noise_threshold_min_std = 3
+    MSParameters.ms_peak.peak_min_prominence_percent = 0.2
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location)
 
     # mass_spectrum = transient.get_mass_spectrum(plot_result=False, auto_process=True)
 
-    mass_spectrum = parser.get_average_mass_spectrum_in_scan_range()
+    mass_spectrum = parser.get_average_mass_spectrum()
 
     return mass_spectrum, 3
 
@@ -58,40 +60,40 @@ def run_thermo(file_location):
 def calspec(msobj, refmasslist, order=2):
 
     calfn = MzDomainCalibration(msobj, refmasslist)
-    ref_mass_list_fmt = calfn.load_ref_mass_list(refmasslist)
+    ref_mass_list_fmt = calfn.load_ref_mass_list()
 
-    imzmeas, mzrefs = calfn.find_calibration_points(msobj, ref_mass_list_fmt,
+    imzmeas, mzrefs = calfn.find_calibration_points(ref_mass_list_fmt,
                                                     calib_ppm_error_threshold=(-1.0, 1.0),
                                                     calib_snr_threshold=4)
 
     if len(mzrefs) < 5:
-        imzmeas, mzrefs = calfn.find_calibration_points(msobj, ref_mass_list_fmt,
+        imzmeas, mzrefs = calfn.find_calibration_points(ref_mass_list_fmt,
                                                         calib_ppm_error_threshold=(-1.5, 1.5),
                                                         calib_snr_threshold=4)
 
     if len(mzrefs) < 5:
-        imzmeas, mzrefs = calfn.find_calibration_points(msobj, ref_mass_list_fmt,
+        imzmeas, mzrefs = calfn.find_calibration_points(ref_mass_list_fmt,
                                                         calib_ppm_error_threshold=(-3, 3),
                                                         calib_snr_threshold=4)
 
     if len(mzrefs) < 5:
-        imzmeas, mzrefs = calfn.find_calibration_points(msobj,ref_mass_list_fmt,
+        imzmeas, mzrefs = calfn.find_calibration_points(ref_mass_list_fmt,
                                                         calib_ppm_error_threshold=(-5, 5),
                                                         calib_snr_threshold=4)    
 
     if len(mzrefs) < 5:
 
-        imzmeas, mzrefs = calfn.find_calibration_points(msobj, ref_mass_list_fmt,
+        imzmeas, mzrefs = calfn.find_calibration_points(ref_mass_list_fmt,
                                                         calib_ppm_error_threshold=(-7, 7),
                                                         calib_snr_threshold=4) 
 
     if len(mzrefs) < 5:
 
-        imzmeas, mzrefs = calfn.find_calibration_points(msobj, ref_mass_list_fmt,
+        imzmeas, mzrefs = calfn.find_calibration_points(ref_mass_list_fmt,
                                                         calib_ppm_error_threshold=(-10, 10),
                                                         calib_snr_threshold=4)
 
-    calfn.recalibrate_mass_spectrum(msobj, imzmeas, mzrefs, order=order)
+    calfn.recalibrate_mass_spectrum(imzmeas, mzrefs, order=order)
 
 def set_parameters(mass_spectrum, field_strength=12, pos=False):
 
@@ -116,6 +118,17 @@ def set_parameters(mass_spectrum, field_strength=12, pos=False):
         mass_spectrum.molecular_search_settings.max_ppm_error = 1
 
         mass_spectrum.settings.calib_sn_threshold = 4
+
+    elif field_strength == 7:
+
+        mass_spectrum.settings.max_calib_ppm_error = 3
+        mass_spectrum.settings.min_calib_ppm_error = -3
+
+        mass_spectrum.molecular_search_settings.error_method = 'None'
+        mass_spectrum.molecular_search_settings.min_ppm_error = -1
+        mass_spectrum.molecular_search_settings.max_ppm_error = 1
+
+        mass_spectrum.settings.calib_sn_threshold = 4
     # 21T Data
     else:
 
@@ -126,7 +139,7 @@ def set_parameters(mass_spectrum, field_strength=12, pos=False):
         mass_spectrum.molecular_search_settings.min_ppm_error = -0.5
         mass_spectrum.molecular_search_settings.max_ppm_error = 0.5
 
-    # mass_spectrum.molecular_search_settings.url_database = "postgres://coremsdb:coremsmolform@localhost:5432/molformula"
+    mass_spectrum.molecular_search_settings.url_database = "postgresql+psycopg2://coremsappdb:coremsapppnnl@localhost:5432/coremsapp"
     mass_spectrum.molecular_search_settings.min_dbe = 0
     mass_spectrum.molecular_search_settings.max_dbe = 40
 
@@ -200,7 +213,11 @@ def run_nmdc_workflow(args):
 
         return "all_good", mass_spectrum
     
-    except:
+    except Exception as inst:
+
+        print(type(inst))    # the exception instance
+        print(inst.args)     # arguments stored in .args
+        print(inst)
         return 'error', None
 
 def monitor(target):

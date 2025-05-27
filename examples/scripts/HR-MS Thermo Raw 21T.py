@@ -21,16 +21,15 @@ from corems.encapsulation.factory.parameters import MSParameters
 
 def run_thermo(file_location):
 
-    MSParameters.mass_spectrum.threshold_method = 'relative_abundance'
-    MSParameters.mass_spectrum.relative_abundance_threshold = 0.1
+    MSParameters.mass_spectrum.noise_threshold_method = 'relative_abundance'
+    MSParameters.mass_spectrum.noise_threshold_min_relative_abundance = 0.1
 
-    # MSParameters.mass_spectrum.threshold_method = 'log'
-    # MSParameters.mass_spectrum.s2n_threshold = 6
+    # MSParameters.mass_spectrum.noise_threshold_method = 'log'
+    # MSParameters.mass_spectrum.noise_threshold_min_s2n = 6
 
     parser = rawFileReader.ImportMassSpectraThermoMSFileReader(file_location)
 
-    parser.chromatogram_settings.start_scan = -1
-    parser.chromatogram_settings.end_scan = -1
+    parser.chromatogram_settings.scans = (-1, -1)
     
     tic_data, ax = parser.get_tic(ms_type='MS', plot=True)
 
@@ -43,17 +42,16 @@ def run_thermo(file_location):
     print(transient_time_list)
 
     # sums all the mass spectra
-    mass_spectrum = parser.get_average_mass_spectrum_in_scan_range()
+    mass_spectrum = parser.get_average_mass_spectrum()
 
     # sums scans in selected range
-    parser.chromatogram_settings.start_scan = 1
-    parser.chromatogram_settings.end_scan = 10
+    parser.chromatogram_settings.scans = (1, 10)
     
-    mass_spectrum = parser.get_average_mass_spectrum_in_scan_range()
+    mass_spectrum = parser.get_average_mass_spectrum()
     
-    scans_list = [1]
+    parser.chromatogram_settings.scans = [1]
     # sums scans in selected range
-    mass_spectrum = parser.get_average_mass_spectrum_by_scanlist(scans_list)
+    mass_spectrum = parser.get_average_mass_spectrum()
 
     return mass_spectrum
 
@@ -115,12 +113,12 @@ if __name__ == "__main__":
     # file_location = file_dialog.getOpenFileName()[0]
     # app.quit()
 
-    file_location = "tests/tests_data/ftms/SRFA_NEG_ESI_ORB.raw"
+    file_location = "tests/tests_data/ftms/Exploris_SRFA_Example.raw"
     # change parameters here
 
     mass_spectrum = run_thermo(file_location)
 
-    print("aquisition_time:",  mass_spectrum.aquisition_time )
+    print("acquisition_time:",  mass_spectrum.acquisition_time )
     ax = mass_spectrum.plot_mz_domain_profile()
 
     #for mspeak in mass_spectrum:
